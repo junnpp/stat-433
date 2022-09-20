@@ -1,0 +1,53 @@
+---
+title: "STAT 433 - HW1"
+author: "Junhyeok Park"
+date: "2022-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+library(lubridate)
+```
+
+## Homework / in class exercise
+1. How many flights have a missing dep_time? What other variables are missing? What might these rows represent?
+```{r}
+flights %>% count(is.na(dep_time))
+```
+There are 8255 of flights that have a missing `dep_time`.
+
+2. Currently dep_time and sched_dep_time are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.
+```{r}
+flights2 = flights %>% 
+  mutate(dep_time = (dep_time %/% 100) * 60 + dep_time %% 100,
+         sched_dep_time = (sched_dep_time %/% 100) * 60 + sched_dep_time %% 100)
+```
+
+3. Look at the number of cancelled flights per day. Is there a pattern? Is the proportion of canceled flights related to the average delay? Use multiple dyplr operations, all on one line, concluding with `ggplot(aes(x= ,y=)) + geom_point()`.
+```{r}
+# create a column that indicates if the flight is cancelled
+# 1 indicates flight cancellation
+flights2 %>%
+    mutate(cancelled = case_when(
+      is.na(dep_time) ~ 1,
+      !is.na(dep_time) ~ 0
+    )) %>%
+  group_by(year, month, day) %>%
+  summarise(avg_arr_del = mean(arr_delay[arr_delay > 0], na.rm=TRUE),
+            avg_dep_del = mean(dep_delay[dep_delay > 0], na.rm=TRUE),
+            sum_cancelled = sum(cancelled)) %>%
+  ggplot(aes(x= avg_arr_del, y=sum_cancelled)) + 
+  geom_point() +
+  xlab("Average Arrival Delay in Minutes") + 
+  ylab("# of Cancalled Flights per Day") + theme_minimal()
+```
+
+
+
+
