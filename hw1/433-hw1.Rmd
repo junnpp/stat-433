@@ -2,7 +2,9 @@
 title: "STAT 433 - HW1"
 author: "Junhyeok Park"
 date: "2022-09-20"
-output: md_document
+output:
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +17,8 @@ library(nycflights13)
 ```
 
 ## Homework / in class exercise
-1. How many flights have a missing `dep_time`? What other variables are missing? What might these rows represent?
+
+**Q1. How many flights have a missing `dep_time`? What other variables are missing? What might these rows represent?**
 ```{r}
 flights1 = flights %>% mutate(problem1 = case_when(
     is.na(dep_time) ~ 1,
@@ -33,7 +36,7 @@ flights1 %>%
 ```
 If `dep_time` is a missing value, then usually the row also has missing values for `dep_delay`, `arr_time`, `arr_delay`, and `air_time`. From this information, we might guess that the rows that have missing value for `dep_time` indicates flight cancellation.
 
-2. Currently `dep_time` and `sched_dep_time` are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.
+**Q2. Currently `dep_time` and `sched_dep_time` are convenient to look at, but hard to compute with because they’re not really continuous numbers. Convert them to a more convenient representation of number of minutes since midnight.**
 ```{r}
 flights2 = flights %>% 
   mutate(dep_time = (dep_time %/% 100) * 60 + dep_time %% 100,
@@ -42,7 +45,7 @@ flights2 = flights %>%
 flights2 %>% head()
 ```
 
-3. Look at the number of cancelled flights per day. Is there a pattern? Is the proportion of canceled flights related to the average delay? Use multiple dyplr operations, all on one line, concluding with `ggplot(aes(x= ,y=)) + geom_point()`.
+**Q3. Look at the number of cancelled flights per day. Is there a pattern? Is the proportion of canceled flights related to the average delay? Use multiple dyplr operations, all on one line, concluding with `ggplot(aes(x= ,y=)) + geom_point()`.**
 ```{r}
 # create a column that indicates if the flight is cancelled
 # 1 indicates flight cancellation
