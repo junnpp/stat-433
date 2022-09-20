@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r include = FALSE}
 library(tidyverse)
 library(nycflights13)
+options(dplyr.summarise.inform = FALSE)
 ```
 
 ## Homework / in class exercise
