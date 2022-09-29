@@ -56,15 +56,14 @@ flights2 %>%
       !is.na(dep_time) ~ 0
     )) %>%
   group_by(year, month, day) %>%
-  summarise(avg_arr_del = mean(arr_delay[arr_delay > 0], na.rm=TRUE),
-            avg_dep_del = mean(dep_delay[dep_delay > 0], na.rm=TRUE),
+  summarise(avg_del = mean(mean(arr_delay[arr_delay > 0], na.rm=TRUE), mean(dep_delay[dep_delay > 0], na.rm=TRUE)),
             sum_cancelled = sum(cancelled)) %>%
-  ggplot(aes(x= avg_arr_del, y=sum_cancelled)) + 
-  geom_point() +
-  xlab("Average Arrival Delay in Minutes") + 
+  ggplot() + 
+  geom_point(aes(x= avg_del, y=sum_cancelled)) +
+  xlab("Average Delay in Minutes") + 
   ylab("# of Cancalled Flights per Day") + theme_minimal()
 ```
-
+Notice that there is a positive correlation between average delay and the number of cancelled flights per day, meaning that flights with higher average delay are more likely to get cancelled.
 
 
 
