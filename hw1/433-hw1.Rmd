@@ -63,6 +63,7 @@ flights2 %>%
   xlab("Average Delay in Minutes") + 
   ylab("# of Cancalled Flights per Day") + theme_minimal()
 ```
+
 Notice that there is a positive correlation between average delay and the number of cancelled flights per day, meaning that flights with higher average delay are more likely to get cancelled.
 
 
