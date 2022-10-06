@@ -1,0 +1,156 @@
+---
+title: "STAT 433 - HW2"
+author: "Junhyeok Park"
+date: "`r Sys.Date()`"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(dplyr.summarise.inform = FALSE)
+options(warn=-1)
+```
+
+```{r include = FALSE}
+library(tidyverse)
+library(nycflights13)
+library(lubridate)
+```
+
+## Question
+
+> What time of day should you fly if you want to avoid delays as much as possible? Does this choice depend on anything? Season? Weather? Airport? Airline? Find three patterns (“null results” are ok!). Write your results into Rmarkdown. Include a short introduction that summarizes the three results. Then, have a section for each finding. Support each finding with data summaries and visualizations. Include your code when necessary. This shouldn’t be long, but it might take some time to find the things you want to talk about and lay them out in an orderly way.
+
+## Introduction
+
+If there's a way to avoid flight delay as much as possible, what would that be? In this short report, I analyzed the `flights` data set to see if there's any pattern among flights delay and provided a strategy to avoid delay. 
+
+### Pattern 1) Based on General Departure Day and Hour
+
+It would be reasonable to think that certain weekday could be more hectic compared to the others. Based on the plot below, notice that the Friday has the largest average delay of 16.1 minutes and the Sunday has the lowest delay of about 7.6 minutes.
+
+```{r echo=FALSE}
+# by wday
+flights %>% 
+  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+  mutate(wday = wday(time_hour)) %>%
+  group_by(wday) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
+  arrange(mean_del) %>%
+  ggplot(aes(x=as.factor(wday), y=mean_del)) +
+  geom_col(stat='identity') +
+  geom_text(aes(label = round(mean_del,1)), vjust = 1.5, colour = "white")+ 
+  scale_x_discrete(breaks=c("1","2","3","4","5","6","7"),
+        labels=c("Mon","Tue","Wed","Thur","Fri","Sat","Sun")) +
+  xlab("Week Day") + 
+  ylab("Mean Departure Delay in Minutes") +
+  ggtitle("Mean Departure Delay per Week Day")
+```
+
+```{r echo=FALSE}
+flights %>%
+  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+  group_by(hour) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
+  ggplot(aes(x=as.factor(hour), mean_del)) +
+  geom_col(stat='identity') +
+  geom_text(aes(label = round(mean_del,1)), vjust = 1.2, colour = "white", size=2.5)+ 
+  xlab("Departure Hour") + 
+  ylab("Mean Departure Delay in Minutes") +
+  ggtitle("Mean Departure Delay per Hour")
+```
+
+What are the distributions of average delay for each hour per weekday?
+
+```{r}
+flights %>%
+  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+  mutate(wday = wday(time_hour)) %>%
+  group_by(wday, hour) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
+  ggplot(aes(x=as.factor(hour), y=mean_del)) +
+  geom_col(stat='identity') +
+  facet_grid(rows=vars(as.factor(wday)))
+```
+
+## Pattern 2) Time and Day based on the Airport Origin
+
+```{r echo=FALSE}
+# average number of flights cancellation per origin
+flights %>% 
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 1,
+    !is.na(dep_delay) ~ 0
+  )) %>% 
+  group_by(origin) %>%
+  summarise(avg_canceled = mean(canceled, na.rm=T)) %>%
+  ggplot(aes(x=origin, y=avg_canceled)) + 
+  geom_col(width=0.5)
+
+# average delay per origin
+flights %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 1,
+    !is.na(dep_delay) ~ 0
+  )) %>% 
+  filter(canceled == 0) %>%
+  group_by(origin) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm=T)) %>%
+  ggplot(aes(x=origin, y=avg_delay)) +
+  geom_col(width = 0.5)
+  
+# per airlines - canceled
+flights %>%
+  left_join(airlines, on=c('tailnum', 'carrier')) %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 1,
+    !is.na(dep_delay) ~ 0
+  )) %>% 
+  group_by(name) %>%
+  summarise(avg_canceled = mean(canceled, na.rm=T)) %>%
+  ggplot(aes(x=name, y=avg_canceled)) + 
+  geom_col(width=0.5) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1, size=6))
+
+# per airlines - delays
+flights %>%
+  left_join(airlines, on=c('tailnum', 'carrier')) %>%
+  group_by(name) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm=T)) %>%
+  ggplot(aes(x=name, y=avg_delay)) + 
+  geom_col(width=0.5) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1, size=5))
+
+# top 3 airlines with the worst delay for each airport
+flights %>% 
+  left_join(airlines, on=c('tailnum', 'carrier')) %>%
+  group_by(origin, name) %>%
+  summarise(avg_del = mean(dep_delay, na.rm=T)) %>%
+  arrange(desc(avg_del), .by_group = TRUE)
+```
+
+
+
+```{r}
+# merge two different data sets
+merged = flights %>%
+    left_join(weather, on=c("year", "month", "day", "origin", "hour", "time_hour", 'origin'))
+
+# w
+merged %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ '1',
+    !is.na(dep_delay) ~ '0'
+  )) %>% 
+  select(canceled, wind_speed) %>% 
+  filter(!is.na(wind_speed)) %>% 
+  group_by(canceled) %>%
+  summarise(wind = mean(wind_speed)) %>% 
+  ggplot(aes(x=canceled, y=wind)) +
+  geom_col()
+
+flights %>% head()
+```
+
