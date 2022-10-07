@@ -17,6 +17,8 @@ options(warn=-1)
 library(tidyverse)
 library(nycflights13)
 library(lubridate)
+library(ggrepel)
+library(ggspectra)
 ```
 
 ## Question
@@ -75,6 +77,27 @@ flights %>%
   facet_grid(rows=vars(as.factor(wday)))
 ```
 
+
+Over the past when we had the worst departure delays?
+
+```{r}
+df = flights %>%
+  mutate(dep_date = make_date(year, month, day)) %>% 
+  group_by(dep_date) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=T))
+
+df %>% slice_max(order_by = mean_del, n=10)
+
+# start from here
+df %>%
+  ggplot(aes(x=dep_date, y=mean_del)) +
+  geom_line() +
+  scale_x_datetime(date_labels="%b %Y", expand=c(0,0)) +
+  stat_peaks(geom='text', color='red', span=15, ignore_threshold = 0.5, hjust = -0.1, angle = 45)
+```
+
+
+
 ## Pattern 2) Time and Day based on the Airport Origin
 
 ```{r echo=FALSE}
@@ -119,7 +142,7 @@ flights %>%
   left_join(airlines, on=c('tailnum', 'carrier')) %>%
   group_by(name) %>%
   summarise(avg_delay = mean(dep_delay, na.rm=T)) %>%
-  ggplot(aes(x=name, y=avg_delay)) + 
+  ggplot(aes(x=fct_rev(fct_reorder(name, avg_delay)), y=avg_delay)) + 
   geom_col(width=0.5) +
   theme(axis.text.x = element_text(angle = 45, hjust=1, size=5))
 
@@ -128,7 +151,8 @@ flights %>%
   left_join(airlines, on=c('tailnum', 'carrier')) %>%
   group_by(origin, name) %>%
   summarise(avg_del = mean(dep_delay, na.rm=T)) %>%
-  arrange(desc(avg_del), .by_group = TRUE)
+  # arrange(desc(avg_del), .by_group = TRUE) %>%
+  slice_max(order_by = avg_del, n=3)
 ```
 
 
@@ -136,21 +160,77 @@ flights %>%
 ```{r}
 # merge two different data sets
 merged = flights %>%
-    left_join(weather, on=c("year", "month", "day", "origin", "hour", "time_hour", 'origin'))
+    left_join(weather, on=c("year", "month", "day", "hour", 'origin'))
 
-# w
+# the average wind speed of canceled and not canceled flights
 merged %>%
   mutate(canceled = case_when(
-    is.na(dep_delay) & is.na(arr_delay) ~ '1',
-    !is.na(dep_delay) ~ '0'
+    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
+    !is.na(dep_delay) ~ 'not canceled'
   )) %>% 
   select(canceled, wind_speed) %>% 
   filter(!is.na(wind_speed)) %>% 
   group_by(canceled) %>%
-  summarise(wind = mean(wind_speed)) %>% 
-  ggplot(aes(x=canceled, y=wind)) +
-  geom_col()
+  summarise(avg_wind_speed = mean(wind_speed))
 
-flights %>% head()
+# the average precipitation in inches of canceled and not canceled flights
+merged %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
+    !is.na(dep_delay) ~ 'not canceled'
+  )) %>% 
+  select(canceled, precip) %>% 
+  filter(!is.na(precip)) %>% 
+  group_by(canceled) %>%
+  summarise(avg_precip_inches = mean(precip))
+
+merged %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
+    !is.na(dep_delay) ~ 'not canceled'
+  )) %>% 
+  select(canceled, visib) %>% 
+  filter(!is.na(visib)) %>% 
+  group_by(canceled) %>%
+  summarise(avg_visib = mean(visib))
+
+# the correlation between delay and precipitation
+merged %>%
+  filter(!is.na(dep_delay) & !is.na(precip)) %>%
+  ggplot(aes(x=precip, y=dep_delay)) +
+  geom_point()
+
+# the correlation between delay and wind speed
+merged %>%
+  filter(!is.na(dep_delay) & !is.na(wind_speed)) %>%
+  ggplot(aes(x=wind_speed, y=dep_delay)) +
+  geom_point()
+
+# the correlation between delay and visibility
+merged %>%
+  filter(!is.na(dep_delay) & !is.na(visib)) %>%
+  ggplot(aes(x=visib, y=dep_delay)) +
+  geom_point()
+
+# the correlation between delay and humidity
+merged %>%
+  filter(!is.na(dep_delay) & !is.na(humid)) %>%
+  ggplot(aes(x=humid, y=dep_delay)) +
+  geom_point()
+```
+
+```{r}
+# by tailnum?
+flights %>% left_join(planes, by=c('tailnum')) %>%
+  group_by(year.y) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=T)) %>%
+  arrange(desc(mean_del))
+
+flights %>% left_join(planes, by=c('tailnum')) %>%
+  group_by(manufacturer) %>%
+  summarise(mean_del = mean(dep_delay, na.rm=T)) %>%
+  arrange(desc(mean_del))
+
+
 ```
 
