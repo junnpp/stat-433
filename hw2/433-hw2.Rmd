@@ -19,84 +19,171 @@ library(nycflights13)
 library(lubridate)
 library(ggrepel)
 library(ggspectra)
+library(ggfortify)
+library(ggpmisc)
 ```
 
 ## Question
 
 > What time of day should you fly if you want to avoid delays as much as possible? Does this choice depend on anything? Season? Weather? Airport? Airline? Find three patterns (“null results” are ok!). Write your results into Rmarkdown. Include a short introduction that summarizes the three results. Then, have a section for each finding. Support each finding with data summaries and visualizations. Include your code when necessary. This shouldn’t be long, but it might take some time to find the things you want to talk about and lay them out in an orderly way.
 
-## Introduction
+## Motivation
 
-If there's a way to avoid flight delay as much as possible, what would that be? In this short report, I analyzed the `flights` data set to see if there's any pattern among flights delay and provided a strategy to avoid delay. 
+In this short report, I analyzed the `flights` data set to see if there's any pattern among flights delay. The readers of this report should be see the pattern of the flights departure delay based on three actors: departure day, weather, and the origin/airline of the flight.
 
 ### Pattern 1) Based on General Departure Day and Hour
 
-It would be reasonable to think that certain weekday could be more hectic compared to the others. Based on the plot below, notice that the Friday has the largest average delay of 16.1 minutes and the Sunday has the lowest delay of about 7.6 minutes.
+It would be reasonable to think that certain weekday could be more hectic compared to the others for some reason. Based on the plot below, notice that the Friday has the largest average delay of 16.1 minutes and the Sunday has the lowest delay of about 7.6 minutes.
+
+```{r echo=FALSE}
+not_canceled = flights %>% 
+  filter(!is.na(dep_time), !is.na(arr_time))
+
+with_canceled = flights %>% 
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 1,
+    !is.na(dep_delay) ~ 0
+  ))
+```
+
 
 ```{r echo=FALSE}
 # by wday
-flights %>% 
-  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
-  mutate(wday = wday(time_hour)) %>%
+not_canceled %>%
+  mutate(wday = wday(time_hour)) %>% 
   group_by(wday) %>%
   summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
   arrange(mean_del) %>%
   ggplot(aes(x=as.factor(wday), y=mean_del)) +
-  geom_col(stat='identity') +
+  geom_col() +
   geom_text(aes(label = round(mean_del,1)), vjust = 1.5, colour = "white")+ 
   scale_x_discrete(breaks=c("1","2","3","4","5","6","7"),
         labels=c("Mon","Tue","Wed","Thur","Fri","Sat","Sun")) +
   xlab("Week Day") + 
   ylab("Mean Departure Delay in Minutes") +
   ggtitle("Mean Departure Delay per Week Day")
+
+# mean cancelation per wday
+with_canceled %>% 
+  mutate(wday = wday(time_hour, label=TRUE)) %>% 
+  group_by(wday) %>%
+  summarise(mean_can = mean(canceled)) %>% 
+  ggplot(aes(x=as.factor(wday), y=mean_can)) +
+  geom_col() +
+  geom_text(aes(label = round(mean_can,4)), vjust = 1.5, colour = "white")+ 
+  xlab("Week Day") + 
+  ylab("Percentage of Cancelation") +
+  ggtitle("Average Percentage of Flights Cancelation per Week Day")
+
 ```
 
 ```{r echo=FALSE}
-flights %>%
-  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+not_canceled %>% 
   group_by(hour) %>%
   summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
   ggplot(aes(x=as.factor(hour), mean_del)) +
   geom_col(stat='identity') +
-  geom_text(aes(label = round(mean_del,1)), vjust = 1.2, colour = "white", size=2.5)+ 
+  geom_text(aes(label = round(mean_del,1)), vjust = 1.2, colour = "white", size=2.5) + 
   xlab("Departure Hour") + 
-  ylab("Mean Departure Delay in Minutes") +
-  ggtitle("Mean Departure Delay per Hour")
+  ylab("Avg Departure Delay in Minutes") +
+  ggtitle("Average Departure Delay per Hour")
 ```
 
 What are the distributions of average delay for each hour per weekday?
 
-```{r}
-flights %>%
-  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
-  mutate(wday = wday(time_hour)) %>%
+```{r echo=FALSE}
+not_canceled %>% 
+  mutate(wday = wday(time_hour, label=TRUE)) %>%
   group_by(wday, hour) %>%
   summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
   ggplot(aes(x=as.factor(hour), y=mean_del)) +
-  geom_col(stat='identity') +
-  facet_grid(rows=vars(as.factor(wday)))
+  geom_col() +
+  facet_grid(rows=vars(wday)) +
+  xlab("Departure Hour") +
+  ylab("Average Departure Delay") +
+  ggtitle("Average Departure Delay per Weekday and Hour")
 ```
 
+## Pattern 2) Weather
 
-Over the past when we had the worst departure delays?
+Over the year, following dates have the average departure delay greater than 40 minutes. Notice in these dates, the average precipitation is almost 5 times greater than that of the other dates in inches. Also, the visibility is shorter in about 1.3 miles than that of others.
 
-```{r}
+```{r echo=FALSE}
+# line graph with peaks
 df = flights %>%
   mutate(dep_date = make_date(year, month, day)) %>% 
   group_by(dep_date) %>%
   summarise(mean_del = mean(dep_delay, na.rm=T))
 
-df %>% slice_max(order_by = mean_del, n=10)
+# df %>% slice_max(order_by = mean_del, n=10)
 
-# start from here
 df %>%
   ggplot(aes(x=dep_date, y=mean_del)) +
-  geom_line() +
-  scale_x_datetime(date_labels="%b %Y", expand=c(0,0)) +
-  stat_peaks(geom='text', color='red', span=15, ignore_threshold = 0.5, hjust = -0.1, angle = 45)
+  geom_line() + 
+  geom_point(data = . %>% filter(mean_del>40), color = "red") + 
+  ylim(-10, 90)
+
+# save those dates with the average of departure delay greater than 40 minutes 
+df_g40 = df %>%
+    filter(mean_del > 40)
+
+peaks_dates = as.character(df_g40[["dep_date"]])
+
+# merge two different data sets
+merged = flights %>%
+    left_join(weather, on=c("year", "month", "day", "hour", 'origin'))
+
+# weather factors grouped by peak
+merged %>% 
+  mutate(date = format(time_hour, "%Y-%m-%d"),
+         is_peak = case_when(
+           date %in% peaks_dates ~ "1",
+           TRUE ~ "0"
+         )) %>%
+  group_by(is_peak) %>%
+  summarise(avg_wind_speed = mean(wind_speed, na.rm=T),
+            avg_precip = mean(precip, na.rm=T),
+            avg_pressure = mean(pressure, na.rm=T),
+            avg_visib = mean(visib, na.rm=T))
 ```
 
+## Pattern 2) Weather
 
+```{r}
+# the average wind speed of canceled and not canceled flights
+merged %>%
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
+    !is.na(dep_delay) ~ 'not canceled'
+  )) %>% 
+  select(canceled, wind_speed) %>% 
+  filter(!is.na(wind_speed)) %>% 
+  group_by(canceled) %>%
+  summarise(avg_wind_speed = mean(wind_speed))
+
+# flight cancelation grouped by 40 min mark
+df_40min = merged %>% 
+  mutate(date = format(time_hour, "%Y-%m-%d"),
+         is_peak = case_when(
+           date %in% peaks_dates ~ "1",
+           TRUE ~ "0"
+         ))
+
+df_40min %>% 
+  mutate(canceled = case_when(
+    is.na(dep_delay) & is.na(arr_delay) ~ 1,
+    TRUE ~ 0
+  )) %>%
+  group_by(is_peak) %>%
+  summarise(mean_can = mean(canceled)) %>%
+  ggplot(aes(x=is_peak, y=mean_can,
+             fill=factor(ifelse(is_peak==1,"Hlighted","Normal")))) +
+  scale_fill_manual(name = "area", values=c("tomato1","grey50")) +
+  geom_col(width=0.5, show.legend = FALSE) +
+  geom_text(aes(label = round(mean_can,4)), vjust = 1.5, colour = "white", size=4) +
+  xlab("Not Peak / Peak Dates") + 
+  ylab("Average Percentage of Flights Cancelation")
+```
 
 ## Pattern 2) Time and Day based on the Airport Origin
 
@@ -157,67 +244,6 @@ flights %>%
 
 
 
-```{r}
-# merge two different data sets
-merged = flights %>%
-    left_join(weather, on=c("year", "month", "day", "hour", 'origin'))
-
-# the average wind speed of canceled and not canceled flights
-merged %>%
-  mutate(canceled = case_when(
-    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
-    !is.na(dep_delay) ~ 'not canceled'
-  )) %>% 
-  select(canceled, wind_speed) %>% 
-  filter(!is.na(wind_speed)) %>% 
-  group_by(canceled) %>%
-  summarise(avg_wind_speed = mean(wind_speed))
-
-# the average precipitation in inches of canceled and not canceled flights
-merged %>%
-  mutate(canceled = case_when(
-    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
-    !is.na(dep_delay) ~ 'not canceled'
-  )) %>% 
-  select(canceled, precip) %>% 
-  filter(!is.na(precip)) %>% 
-  group_by(canceled) %>%
-  summarise(avg_precip_inches = mean(precip))
-
-merged %>%
-  mutate(canceled = case_when(
-    is.na(dep_delay) & is.na(arr_delay) ~ 'canceled',
-    !is.na(dep_delay) ~ 'not canceled'
-  )) %>% 
-  select(canceled, visib) %>% 
-  filter(!is.na(visib)) %>% 
-  group_by(canceled) %>%
-  summarise(avg_visib = mean(visib))
-
-# the correlation between delay and precipitation
-merged %>%
-  filter(!is.na(dep_delay) & !is.na(precip)) %>%
-  ggplot(aes(x=precip, y=dep_delay)) +
-  geom_point()
-
-# the correlation between delay and wind speed
-merged %>%
-  filter(!is.na(dep_delay) & !is.na(wind_speed)) %>%
-  ggplot(aes(x=wind_speed, y=dep_delay)) +
-  geom_point()
-
-# the correlation between delay and visibility
-merged %>%
-  filter(!is.na(dep_delay) & !is.na(visib)) %>%
-  ggplot(aes(x=visib, y=dep_delay)) +
-  geom_point()
-
-# the correlation between delay and humidity
-merged %>%
-  filter(!is.na(dep_delay) & !is.na(humid)) %>%
-  ggplot(aes(x=humid, y=dep_delay)) +
-  geom_point()
-```
 
 ```{r}
 # by tailnum?
