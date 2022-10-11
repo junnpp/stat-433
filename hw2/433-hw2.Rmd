@@ -122,14 +122,20 @@ df %>%
 # save those dates with the average of departure delay greater than 40 minutes 
 df_g40 = df %>%
     filter(mean_del > 40)
+```
 
-peaks_dates = as.character(df_g40[["dep_date"]])
+The dates with the red dots on them are as follows:
 
+```{r}
 # merge two different data sets
 merged = flights %>%
     left_join(weather, by=c("year", "month", "day", "hour", 'origin'))
+```
 
+```{r}
 # weather factors grouped by peak
+peaks_dates = as.character(df_g40[["dep_date"]])
+
 merged %>% 
   mutate(date = format(time_hour.x, "%Y-%m-%d"),
          is_peak = case_when(
@@ -181,6 +187,18 @@ df_40min %>%
   xlab("Not Peak / Peak Dates") + 
   ylab("Average Percentage of Flights Cancelation")
 ```
+
+Let's look up what happened on those peak dates. The dates are as follows: 
+
+```{r}
+peaks_dates
+```
+
+From the line graph with the red dots, we know that the two days with the worst delays are March 08 and July 22.
+
+- March 8th, 2013 New York Weather - [Snow storm blankets New York City, leaving pretty scenes and a sloshy commute](https://www.nbcnews.com/news/photo/snow-storm-blankets-new-york-city-leaving-pretty-scenes-sloshy-flna1c8776255)
+
+- On July 22th, 2013, at the LaGuardia Airport, there was an accident. [Southwest Airlines Flight 345](https://en.wikipedia.org/wiki/Southwest_Airlines_Flight_345#:~:text=On%20July%2022%2C%202013%2C%20the,a%20result%20of%20the%20accident.&text=IATA%20flight%20No.&text=ICAO%20flight%20No.) So the delay was probably not due to the weather, but the accident.
 
 ## Pattern 3) Time and Day based on the Airport Origin
 
