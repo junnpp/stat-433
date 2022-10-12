@@ -198,7 +198,7 @@ From the line graph with the red dots, we know that the two days with the worst 
 
 - March 8th, 2013 New York Weather - [Snow storm blankets New York City, leaving pretty scenes and a sloshy commute](https://www.nbcnews.com/news/photo/snow-storm-blankets-new-york-city-leaving-pretty-scenes-sloshy-flna1c8776255)
 
-- On July 22th, 2013, at the LaGuardia Airport, there was an accident. [Southwest Airlines Flight 345](https://en.wikipedia.org/wiki/Southwest_Airlines_Flight_345#:~:text=On%20July%2022%2C%202013%2C%20the,a%20result%20of%20the%20accident.&text=IATA%20flight%20No.&text=ICAO%20flight%20No.) So the delay was probably not due to the weather, but the accident.
+- On July 22th, 2013, at the LaGuardia Airport, there was a crash. [Southwest Airlines Flight 345](https://en.wikipedia.org/wiki/Southwest_Airlines_Flight_345#:~:text=On%20July%2022%2C%202013%2C%20the,a%20result%20of%20the%20accident.&text=IATA%20flight%20No.&text=ICAO%20flight%20No.) So the delay was probably not due to the weather, but the accident.
 
 ## Pattern 3) Time and Day based on the Airport Origin
 
