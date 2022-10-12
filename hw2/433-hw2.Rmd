@@ -190,7 +190,7 @@ df_40min %>%
 
 Let's look up what happened on those peak dates. The dates are as follows: 
 
-```{r}
+```{r echo=FALSE}
 peaks_dates
 ```
 
@@ -198,11 +198,13 @@ From the line graph with the red dots, we know that the two days with the worst 
 
 - March 8th, 2013 New York Weather - [Snow storm blankets New York City, leaving pretty scenes and a sloshy commute](https://www.nbcnews.com/news/photo/snow-storm-blankets-new-york-city-leaving-pretty-scenes-sloshy-flna1c8776255)
 
-- On July 22th, 2013, at the LaGuardia Airport, there was a crash. [Southwest Airlines Flight 345](https://en.wikipedia.org/wiki/Southwest_Airlines_Flight_345#:~:text=On%20July%2022%2C%202013%2C%20the,a%20result%20of%20the%20accident.&text=IATA%20flight%20No.&text=ICAO%20flight%20No.) So the delay was probably not due to the weather, but the accident.
+- July 22th, 2013, at the LaGuardia Airport, there was a crash. [Southwest Airlines Flight 345](https://en.wikipedia.org/wiki/Southwest_Airlines_Flight_345#:~:text=On%20July%2022%2C%202013%2C%20the,a%20result%20of%20the%20accident.&text=IATA%20flight%20No.&text=ICAO%20flight%20No.) So the delay was probably not due to the weather, but the accident.
 
 ## Pattern 3) Time and Day based on the Airport Origin
 
 Now, let's investigate if there are certain airports that have bad delays compare to other airports.
+
+First of all, the average flights delay and cancelation percentages for each airport in New York City as as follows:
 
 ```{r echo=FALSE}
 # average delay per origin
@@ -233,7 +235,11 @@ flights %>%
   xlab("Origin") + 
   ylab("Average cancelation Percentage") + 
   ggtitle("Average cancelation Percentage for Each Origin")
+```
 
+Let's do the same analysis on the airlines. 
+
+```{r echo=FALSE}
 # per airlines - delays
 flights %>%
   left_join(airlines, by='carrier') %>%
@@ -263,7 +269,7 @@ flights %>%
   ggtitle("Average Cancelation Percentage for Each Airline")
 ```
 
-These following lists show that the 'bad combination' of airports and airlines. First, we have a list with three airlines with the worst average flights delay for each airport.
+These following lists show that the 'bad combination' of airports and airlines. First, we have a data with three airlines with the worst average flights delay for each airport.
 
 ```{r echo=FALSE}
 # top 3 airlines with the worst delay for each airport
@@ -275,7 +281,7 @@ flights %>%
   slice_max(order_by = avg_del, n=3)
 ```
 
-Lastly, let's do the same for the average percentage of flights cancelation.
+Lastly, the following data shows the airlines with the worst average percentage of flights cancelation for each airport.
 
 ```{r echo=FALSE}
 # top 3 airlines with the worst cancelation for each airport
@@ -292,4 +298,4 @@ flights %>%
 
 ## Conclusion
 
-In this report, a preliminary analysis is done on the `nyc flights` data set to distinguish the pattern of flights delay and cancelation percentage based on three factors: departure time, weather, and airport/airlines. The Friday has the worst delay and flights cancelation percentage. Also, try to avoid flights with the departure hour between 18:00 - 21:00. 
+In this report, a preliminary analysis is done on the `nycflights` data set to distinguish the pattern of flights delay and cancelation percentage based on three factors: departure time, weather, and airport/airlines. The Friday has the worst delay and flights cancelation percentage. Also, try to avoid flights with the departure hour between 18:00 - 21:00. 
