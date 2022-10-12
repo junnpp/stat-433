@@ -237,7 +237,7 @@ flights %>%
   ggtitle("Average cancelation Percentage for Each Origin")
 ```
 
-Let's do the same analysis on the airlines. 
+Let's do the same analysis on the airlines. For the flights delay, Frontier Airlines, Express Jet Airlines, and Mesa Airlines had the worst delay in 2013. SkyWest Airlines, Mesa Airlines, and Endeavor Air Inc had the worst flight cancelation percentage in 2013.
 
 ```{r echo=FALSE}
 # per airlines - delays
