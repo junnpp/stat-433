@@ -126,13 +126,13 @@ df_g40 = df %>%
 
 The dates with the red dots on them are as follows:
 
-```{r}
+```{r echo=FALSE}
 # merge two different data sets
 merged = flights %>%
     left_join(weather, by=c("year", "month", "day", "hour", 'origin'))
 ```
 
-```{r}
+```{r echo=FALSE}
 # weather factors grouped by peak
 peaks_dates = as.character(df_g40[["dep_date"]])
 
