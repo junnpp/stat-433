@@ -41,9 +41,6 @@ flights %>%
   pivot_wider(names_from = origin, values_from = dep_num)
 ```
 
-    ## `summarise()` has grouped output by 'year_day'. You can override using the
-    ## `.groups` argument.
-
     ## # A tibble: 365 × 4
     ## # Groups:   year_day [365]
     ##    year_day   EWR   JFK   LGA
@@ -76,12 +73,7 @@ q3 = flights %>%
     group_by(year_day, dest) %>%
     summarise(num_dep = n()) %>%
     pivot_wider(names_from = dest, values_from = num_dep)
-```
 
-    ## `summarise()` has grouped output by 'year_day'. You can override using the
-    ## `.groups` argument.
-
-``` r
 # replace the missing values with 0
 q3[is.na(q3)] = 0
   
@@ -140,12 +132,6 @@ flights %>%
   ggtitle("The Average Arrival Delay vs. Destination Airport Altitude")
 ```
 
-    ## `geom_smooth()` using formula 'y ~ x'
-
-    ## Warning: Removed 5 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 5 rows containing missing values (geom_point).
-
 ![](433-exam1-review_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ## Question 6
@@ -166,8 +152,6 @@ flights %>%
   ggtitle("Average Arrival Delay for the Hour of the Day")
 ```
 
-    ## Warning: Removed 1 row(s) containing missing values (geom_path).
-
 ![](433-exam1-review_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 ## Question 7
@@ -185,11 +169,6 @@ flights %>%
   geom_line() + 
   facet_wrap(~origin)
 ```
-
-    ## `summarise()` has grouped output by 'origin'. You can override using the
-    ## `.groups` argument.
-
-    ## Warning: Removed 1 row(s) containing missing values (geom_path).
 
 ![](433-exam1-review_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
@@ -210,9 +189,5 @@ flights %>%
   ylab("Arrival Delay") + 
   ggtitle("Arrival Delay vs. Temperature of the Origin Airport for Each Departure Hour")
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 29 rows containing non-finite values (stat_smooth).
 
 ![](433-exam1-review_files/figure-markdown_github/unnamed-chunk-9-1.png)
