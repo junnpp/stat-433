@@ -1,0 +1,143 @@
+---
+title: "STAT 433 - Exam1 Review"
+author: "Junhyeok Park"
+date: "`r Sys.Date()`"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(nycflights13)
+library(lubridate)
+```
+
+
+## Question 1
+
+> Make a table that describes each plane. It should have a column for tailnum, another column for average arrival delay, and another for the year the plane was manufactured.
+
+```{r}
+flights %>%
+  group_by(tailnum) %>%
+  summarise(avg_arr_delay = mean(arr_delay, na.rm=T)) %>%
+  left_join(planes %>% select(tailnum, year), by = "tailnum") %>%
+  arrange(desc(avg_arr_delay))
+```
+
+## Question 2
+
+> Make a table where each row is a day of the year. The first column is the date. The 2:4 columns give the number of (scheduled) departures from EWR, LGA, and JFK.
+
+```{r}
+flights %>%
+  mutate(year_day = yday(time_hour)) %>%
+  group_by(year_day, origin) %>%
+  summarise(dep_num = n()) %>%
+  pivot_wider(names_from = origin, values_from = dep_num)
+```
+
+## Question 3
+
+> Make a table where each row is a day of the year. Each destination airport is a column. The elements (day x destination) give the number of flights to that destination. What should NA’s be?
+
+All missing values should be 0 because in this case the implicit `NA`'s indicate that there was no flight to the airport on that day of the year.
+
+```{r}
+q3 = flights %>%
+    mutate(year_day = yday(time_hour)) %>%
+    group_by(year_day, dest) %>%
+    summarise(num_dep = n()) %>%
+    pivot_wider(names_from = dest, values_from = num_dep)
+
+# replace the missing values with 0
+q3[is.na(q3)] = 0
+  
+q3 %>% head()
+```
+
+## Question 4 
+
+> Of the planes built before 1980, what is the average flight distance?
+
+```{r}
+flights %>% 
+  select(tailnum, distance) %>% 
+  left_join(planes %>% filter(year < 1980), by = "tailnum") %>%
+  summarise(avg_flight_dist = mean(distance, na.rm=T))
+```
+
+## Question 5
+
+> Compute the average arrival delay for each destination airport. Plot this against the airports altitude.
+
+```{r}
+flights %>%
+  group_by(dest) %>%
+  summarise(avg_arr_delay = mean(arr_delay, na.rm=T)) %>% 
+  left_join(airports %>% select(faa, alt), by = c("dest" = "faa")) %>%
+  ggplot(aes(x=alt, y=avg_arr_delay)) + 
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  xlab("Destination Airport Altitude") + 
+  ylab("Average Arrival Delay") +
+  ggtitle("The Average Arrival Delay vs. Destination Airport Altitude")
+  
+```
+
+## Question 6
+
+> Find the average arr_delay, by hour of the day, at EWR. Make a ggplot to show this.
+
+```{r}
+flights %>%
+  filter(origin == "EWR") %>%
+  mutate(day_hour = hour(time_hour)) %>%
+  group_by(day_hour) %>%
+  summarise(avg_arr_delay = mean(arr_delay, na.rm=T)) %>%
+  ggplot(aes(x=day_hour, y=avg_arr_delay)) + 
+  geom_line() + 
+  xlab("Hour of the Day") + 
+  ylab("Average Arrival Delay") + 
+  ggtitle("Average Arrival Delay for the Hour of the Day")
+```
+
+## Question 7
+
+> Find the average arr_delay, by hour of the day, for each of the 3 origin airports. Make a faceted ggplot, one facet for each origin airport.
+
+```{r}
+flights %>% 
+  mutate(day_hour = hour(time_hour)) %>%
+  group_by(origin, day_hour) %>%
+  summarise(avg_arr_delay = mean(arr_delay, na.rm=T)) %>%
+  ggplot(aes(x=day_hour, y=avg_arr_delay)) +
+  geom_line() + 
+  facet_wrap(~origin)
+  
+```
+
+
+## Question 8
+
+> Make a ggplot where the x axis is temperature and the y axis is delay in February. If you've done that, then facet by hour of the day and don't plot points. Instead, just plot a smooth line.
+
+```{r}
+flights %>%
+  filter(month==2 & !is.na(arr_delay)) %>%
+  left_join(weather %>% filter(month==2 & !is.na(temp)), by = c("origin", "year", "month", "day", "hour")) %>%
+  ggplot(aes(x=temp, y=arr_delay)) +
+  geom_smooth() + 
+  facet_wrap(~hour) + 
+  xlab("Temperature") + 
+  ylab("Arrival Delay") + 
+  ggtitle("Arrival Delay vs. Temperature of the Origin Airport for Each Departure Hour")
+```
+
+
