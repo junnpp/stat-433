@@ -50,15 +50,13 @@ with_canceled = flights %>%
 ```{r echo=FALSE}
 # by wday
 not_canceled %>%
-  mutate(wday = wday(time_hour)) %>% 
+  mutate(wday = wday(time_hour, label = T)) %>% 
   group_by(wday) %>%
   summarise(mean_del = mean(dep_delay, na.rm=TRUE)) %>%
   arrange(mean_del) %>%
   ggplot(aes(x=as.factor(wday), y=mean_del)) +
   geom_col() +
   geom_text(aes(label = round(mean_del,1)), vjust = 1.5, colour = "white")+ 
-  scale_x_discrete(breaks=c("1","2","3","4","5","6","7"),
-        labels=c("Mon","Tue","Wed","Thur","Fri","Sat","Sun")) +
   xlab("Week Day") + 
   ylab("Mean Departure Delay in Minutes") +
   ggtitle("Mean Departure Delay per Week Day")
