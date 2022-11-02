@@ -1,0 +1,58 @@
+---
+title: "eda"
+author: "Junhyeok Park"
+date: "2022-10-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+# read in the data
+df_p90_p10 = read_csv("./data/p90-vs-p10-logs.csv")
+
+# rename the columns
+df_p90_p10 = df_p90_p10 %>% rename(
+    "country" = "Entity",
+    "code" = "Code",
+    "year" = "Year",
+    "p90" = "P90",
+    "p10" = "P10",
+    "population" = "Population (historical estimates)",
+    "continent" = "Continent"
+  )
+ 
+# extract continent values
+continent_df = df_p90_p10 %>%
+  filter(!is.na(continent)) %>%
+  select(country, continent)
+
+# for each country, get income values between the earliest and the lastest data
+# after filling missing continent values
+df = df_p90_p10 %>%
+    select(-continent) %>% 
+    left_join(continent_df, by = "country") %>% 
+    filter(!is.na(p90) | !is.na(p10)) %>%
+    group_by(country) %>%
+    slice(which(year >= min(year) & year <= max(year)))
+
+df %>%
+  ggplot(aes(x = log(p10), y = log(p90), color = continent)) + 
+  geom_point()
+```
+
+```{r}
+# gdp per capita vs. income inequality
+# url : https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality
+
+# income inequality
+# url : https://ourworldindata.org/grapher/economic-inequality-gini-index
+
+# share of population living in extreme poverty
+# url : https://ourworldindata.org/explorers/poverty-explorer
+```
+
