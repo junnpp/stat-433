@@ -2,7 +2,7 @@
 
 ## Reviews
 
-1. [review 1](reviews/433-exam1-review.md)
+1. [review 1](reviews/exam1/433-exam1-review.md)
 
 ## Assignments
 1. [hw 1](hw1/433-hw1.md)
