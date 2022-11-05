@@ -10,3 +10,4 @@
 3. [hw 3](hw3/433_hw3.md)
 
 ## Projects
+- [income inequality](project/eda.md)
