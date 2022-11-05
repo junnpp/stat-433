@@ -49,6 +49,7 @@ One of our final visualization will look something like this.
 
 ### Further Analysis
 
+<<<<<<< HEAD
 -   Income inequality based on the continents.
 -   Any specific countries? (US, Canada, China, Europe, etc)
 -   Any other interesting data to consider?
@@ -58,3 +59,14 @@ One of our final visualization will look something like this.
         inequality](https://ourworldindata.org/grapher/economic-inequality-gini-index)
     -   [share of population living in extreme
         poverty](https://ourworldindata.org/explorers/poverty-explorer)
+=======
+- Income inequality based on the continents.
+- Any specific countries? (US, Canada, China, Europe, etc)
+- Any other interesting data to consider?
+    -   [gdp per capita vs income
+    inequality](https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality)
+    -   [income
+    inequality](https://ourworldindata.org/grapher/economic-inequality-gini-index)
+    -   [share of population living in extreme
+    poverty](https://ourworldindata.org/explorers/poverty-explorer)
+>>>>>>> 0559d1c598818d6612523e815cd8b2fe9f0af749
