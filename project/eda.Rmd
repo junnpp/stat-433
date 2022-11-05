@@ -1,8 +1,10 @@
 ---
-title: "eda"
+title: "STAT 433 - Project"
 author: "Junhyeok Park"
-date: "2022-10-29"
-output: html_document
+date: "`r Sys.Date()`"
+output:
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +13,11 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-```{r}
+## Pre-Processing
+
+First few rows of the raw data are as follows:
+
+```{r echo=FALSE, message=FALSE}
 # read in the data
 df_p90_p10 = read_csv("./data/p90-vs-p10-logs.csv")
 
@@ -25,13 +31,27 @@ df_p90_p10 = df_p90_p10 %>% rename(
     "population" = "Population (historical estimates)",
     "continent" = "Continent"
   )
- 
-# extract continent values
+
+df_p90_p10 %>% head(10)
+```
+
+### Description on Data Measures
+
+- `country`: the name of the country
+- `code`: country code (3 capital letters)
+- `year`: the year in which the income distribution was recorded
+- `p90`: 90th income percentile
+- `p10`: 10th income percentile
+- `population`: estimated population of the country
+- `continent`: the continent to which the country belongs
+
+```{r include=FALSE}
+# extract continents
 continent_df = df_p90_p10 %>%
   filter(!is.na(continent)) %>%
   select(country, continent)
 
-# for each country, get income values between the earliest and the lastest data
+# for each country, get income values between the earliest and the lastest avaliable data
 # after filling missing continent values
 df = df_p90_p10 %>%
     select(-continent) %>% 
@@ -39,20 +59,53 @@ df = df_p90_p10 %>%
     filter(!is.na(p90) | !is.na(p10)) %>%
     group_by(country) %>%
     slice(which(year >= min(year) & year <= max(year)))
+```
 
+Few rows of the cleaned data are as follows:
+
+```{r echo=FALSE}
 df %>%
-  ggplot(aes(x = log(p10), y = log(p90), color = continent)) + 
-  geom_point()
+  slice_max(order_by = p90, n=1) %>%
+  head(10)
 ```
 
+One of our final visualization will look something like this. 
+
+```{r echo=FALSE}
+# axes are log transformed
+df %>%
+  ggplot(aes(x=p10, y=p90, color = continent)) + 
+  geom_point() + 
+  geom_abline(intercept = 0, slope = 1, color = "gray", lty = "dashed") +
+  annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+  geom_abline(intercept = 1, slope = 1, color = "gray", lty = "dashed") +
+  annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+  scale_x_log10(labels=scales::dollar_format()) + 
+  scale_y_log10(labels=scales::dollar_format()) + 
+  xlab("P10 Income Distribution") + 
+  ylab("P90 Income Distribution") +
+  labs(color = "Continent") 
+```
+
+### Further Analysis
+
+1. Income inequality based on the continents. 
+2. Any specific countries? (US, Canada, China, Europe, etc)
+3. Any other interesting data to consider?
+  - [gdp per capita vs income inequality](https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality)
+  - [income inequality](https://ourworldindata.org/grapher/economic-inequality-gini-index)
+  - [share of population living in extreme poverty](https://ourworldindata.org/explorers/poverty-explorer)
+
+```{r include=FALSE}
+knitr::knit_exit()
+```
+
+## Based on the Continents
 ```{r}
-# gdp per capita vs. income inequality
-# url : https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality
-
-# income inequality
-# url : https://ourworldindata.org/grapher/economic-inequality-gini-index
-
-# share of population living in extreme poverty
-# url : https://ourworldindata.org/explorers/poverty-explorer
+df %>%
+  filter(country == "United States" | country == "China") %>%
+  ggplot(aes(x=log(p10), y=log(p90), color = country)) + 
+  geom_line() 
 ```
+
 
