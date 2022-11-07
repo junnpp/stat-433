@@ -20,41 +20,45 @@ First few rows of the raw data are as follows:
 
 -   `country`: the name of the country
 -   `code`: country code (3 capital letters)
--   `year`: the year in which the income distribution was recorded
+-   `year`: the year in which the income was recorded
 -   `p90`: 90th income percentile
 -   `p10`: 10th income percentile
 -   `population`: estimated population of the country
 -   `continent`: the continent to which the country belongs
 
-Few rows of the cleaned data are as follows:
+First few rows of the cleaned data are as follows:
 
     ## # A tibble: 10 × 7
-    ## # Groups:   country [10]
-    ##    country           code   year    p90   p10 population continent
-    ##    <chr>             <chr> <dbl>  <dbl> <dbl>      <dbl> <chr>    
-    ##  1 Albania           ALB    2019  27.6   6.65    2873883 Europe   
-    ##  2 Algeria           DZA    2011  15.1   4.49   36543548 Africa   
-    ##  3 Angola            AGO    2000  14.5   1.18   16394067 Africa   
-    ##  4 Argentina - urban <NA>   1986  69.8   9.82         NA <NA>     
-    ##  5 Armenia           ARM    2016  15.1   3.7     2865841 Asia     
-    ##  6 Australia         AUS    2014 115.   26.2    23469578 Oceania  
-    ##  7 Austria           AUT    2019 111.   28.4     8879939 Europe   
-    ##  8 Azerbaijan        AZE    2005  15.3   5.35    8656243 Asia     
-    ##  9 Bangladesh        BGD    2016   7.62  2     159784576 Asia     
-    ## 10 Belarus           BLR    2019  30.2  10       9673971 Europe
+    ## # Groups:   country [1]
+    ##    country code   year   p90   p10 population continent
+    ##    <chr>   <chr> <dbl> <dbl> <dbl>      <dbl> <chr>    
+    ##  1 Albania ALB    1996  13.2  3.7     3271336 Europe   
+    ##  2 Albania ALB    2002  14.0  3.51    3123554 Europe   
+    ##  3 Albania ALB    2005  15.4  3.99    3032636 Europe   
+    ##  4 Albania ALB    2008  16.4  4.6     2951690 Europe   
+    ##  5 Albania ALB    2012  16    4.41    2892191 Europe   
+    ##  6 Albania ALB    2014  19.1  3.68    2884100 Europe   
+    ##  7 Albania ALB    2015  22.1  4.8     2882482 Europe   
+    ##  8 Albania ALB    2016  23.2  4.7     2881064 Europe   
+    ##  9 Albania ALB    2017  22.7  4.91    2879361 Europe   
+    ## 10 Albania ALB    2018  23.3  5.47    2877019 Europe
 
-One of our final visualization will look something like this.
+One of our final visualizations will look something like this. Each
+point is a data point of a country in a specific year. Since there are
+so many countries, it is hard to distinguish each data point. We will
+use Shiny to give users to get the information they want.
 
 ![](eda_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 ### Further Analysis
 
--   Income inequality based on the continents.
--   Any specific countries? (US, Canada, China, Europe, etc)
--   Any other interesting data to consider?
-    -   [gdp per capita vs income
-        inequality](https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality)
-    -   [income
-        inequality](https://ourworldindata.org/grapher/economic-inequality-gini-index)
-    -   [share of population living in extreme
-        poverty](https://ourworldindata.org/explorers/poverty-explorer)
+1.  Income inequality based on the continents.
+2.  Any specific countries? (US, Canada, China, Europe, etc)
+3.  Any other interesting data to consider?
+
+-   [gdp per capita vs income
+    inequality](https://ourworldindata.org/grapher/gdp-per-capita-vs-economic-inequality)
+-   [income
+    inequality](https://ourworldindata.org/grapher/economic-inequality-gini-index)
+-   [share of population living in extreme
+    poverty](https://ourworldindata.org/explorers/poverty-explorer)
