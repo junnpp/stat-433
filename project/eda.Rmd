@@ -14,7 +14,6 @@ library(ggplot2)
 ```
 
 ## Pre-Processing
-
 First few rows of the raw data are as follows:
 
 ```{r echo=FALSE, message=FALSE}
@@ -36,10 +35,9 @@ df_p90_p10 %>% head(10)
 ```
 
 ### Description on Data Measures
-
 - `country`: the name of the country
 - `code`: country code (3 capital letters)
-- `year`: the year in which the income distribution was recorded
+- `year`: the year in which the income was recorded
 - `p90`: 90th income percentile
 - `p10`: 10th income percentile
 - `population`: estimated population of the country
@@ -61,15 +59,14 @@ df = df_p90_p10 %>%
     slice(which(year >= min(year) & year <= max(year)))
 ```
 
-Few rows of the cleaned data are as follows:
+First few rows of the cleaned data are as follows:
 
 ```{r echo=FALSE}
 df %>%
-  slice_max(order_by = p90, n=1) %>%
   head(10)
 ```
 
-One of our final visualization will look something like this. 
+One of our final visualizations will look something like this. Each point is a data point of a country in a specific year. Since there are so many countries, it is hard to distinguish each data point. We will use Shiny to give users to get the information they want.
 
 ```{r echo=FALSE}
 # axes are log transformed
@@ -88,7 +85,6 @@ df %>%
 ```
 
 ### Further Analysis
-
 1. Income inequality based on the continents. 
 2. Any specific countries? (US, Canada, China, Europe, etc)
 3. Any other interesting data to consider?
@@ -100,12 +96,46 @@ df %>%
 knitr::knit_exit()
 ```
 
-## Based on the Continents
+## EDA
 ```{r}
+# average 10th and 90th income percentile per continent
 df %>%
-  filter(country == "United States" | country == "China") %>%
-  ggplot(aes(x=log(p10), y=log(p90), color = country)) + 
-  geom_line() 
+  group_by(continent) %>%
+  summarise(avg_p_10 = mean(p10), avg_p_90 = mean(p90)) %>%
+  pivot_longer(-continent, names_to = "percentile", values_to = "avg_income") %>%
+  ggplot(aes(x=continent, y=avg_income, fill=percentile)) +
+  geom_col(position="dodge")
 ```
 
+```{r}
+# arrows
+countries = c("United States", "China", "Japan", "Canada", "India")
+
+df %>%
+  filter(country %in% countries) %>%
+  ggplot(aes(x=p10, y=p90, color = country)) +
+  geom_line(arrow = arrow(length = unit(0.08, "inches")))
+```
+
+```{r}
+# color code for each continent
+# TODO: create a plot for each continent and beautifully put them together
+continents = unique(df$continent)
+
+df %>%
+  ggplot() + 
+  geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+  geom_point(data = subset(df, continent == 'Africa'),
+             aes(x=p10, y=p90, color = "Africa"), alpha = 0.6) + 
+  geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+  annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+  geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+  annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+  scale_x_log10(labels=scales::dollar_format()) + 
+  scale_y_log10(labels=scales::dollar_format()) + 
+  xlab("P10 Income Distribution") + 
+  ylab("P90 Income Distribution") +
+  labs(color = "Continent") +
+  scale_colour_manual(values=c(Africa="red", Other="gray"))
+```
 
