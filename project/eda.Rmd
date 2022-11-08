@@ -11,6 +11,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ggplot2)
+library(patchwork)
+library(owidR)
 ```
 
 ## Pre-Processing
@@ -109,33 +111,158 @@ df %>%
 
 ```{r}
 # arrows
-countries = c("United States", "China", "Japan", "Canada", "India")
+countries = c("United States", "China", "Japan", "Canada", "India", "United Kingdom", "World")
 
 df %>%
   filter(country %in% countries) %>%
   ggplot(aes(x=p10, y=p90, color = country)) +
-  geom_line(arrow = arrow(length = unit(0.08, "inches")))
+  geom_line(arrow = arrow(length = unit(0.08, "inches"))) + 
+  scale_x_log10(labels=scales::dollar_format()) + 
+  scale_y_log10(labels=scales::dollar_format()) 
 ```
-
+### Continent
 ```{r}
 # color code for each continent
-# TODO: create a plot for each continent and beautifully put them together
 continents = unique(df$continent)
 
-df %>%
-  ggplot() + 
-  geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
-  geom_point(data = subset(df, continent == 'Africa'),
-             aes(x=p10, y=p90, color = "Africa"), alpha = 0.6) + 
-  geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
-  annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
-  geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
-  annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
-  scale_x_log10(labels=scales::dollar_format()) + 
-  scale_y_log10(labels=scales::dollar_format()) + 
-  xlab("P10 Income Distribution") + 
-  ylab("P90 Income Distribution") +
-  labs(color = "Continent") +
-  scale_colour_manual(values=c(Africa="red", Other="gray"))
+africa = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "Africa"),
+               aes(x=p10, y=p90, color = "Africa"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(Africa="red", Other="gray"), name = "")
+
+eur = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "Europe"),
+               aes(x=p10, y=p90, color = "Europe"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(Europe="red", Other="gray"), name = "")
+
+asia = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "Asia"),
+               aes(x=p10, y=p90, color = "Asia"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(Asia="red", Other="gray"), name = "")
+
+oce = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "Oceania"),
+               aes(x=p10, y=p90, color = "Oceania"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(Oceania="red", Other="gray"), name = "")
+
+na = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "North America"),
+               aes(x=p10, y=p90, color = "North America"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(`North America`="red", Other="gray"), name = "")
+
+sa = df %>%
+    ggplot() + 
+    geom_point(aes(x=p10, y=p90, color = "Other"), alpha = 0.6) + 
+    geom_point(data = subset(df, continent == "South America"),
+               aes(x=p10, y=p90, color = "South America"), alpha = 0.6) + 
+    geom_abline(intercept = 0, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=4.5, y=3, label = "1:1", color = "gray") + 
+    geom_abline(intercept = 1, slope = 1, color = "black", lty = "dashed", alpha = 0.6) +
+    annotate('text', x=5.5, y=100, label = "10:1", color = "gray") + 
+    scale_x_log10(labels=scales::dollar_format()) + 
+    scale_y_log10(labels=scales::dollar_format()) + 
+    xlab("P10") + 
+    ylab("P90") +
+    scale_colour_manual(values=c(`South America`="red", Other="gray"), name = "")
+
+(africa + asia) / (eur + oce ) / (na + sa)
 ```
+
+### Other Datasets?
+```{r}
+gini_df = owid("economic-inequality-gini-index")
+gini_df
+
+owid_search("income inequality")
+
+# death-rate
+death_rate_df = owid("death-rate-from-cancers-vs-income-inequality")
+
+# anxiety disorders
+anxiety_df = owid("anxiety-disorders-vs-income-inequality")
+
+# suicide rate
+suicide_df = owid("suicide-rate-vs-income-inequality")
+
+# interpersonal trust 
+trust_df = owid("interpersonal-trust-vs-income-inequality")
+``` 
+
+## Death Rate
+```{r}
+# renaming the columns
+death_rate_df = death_rate_df %>%
+    rename(
+      "country" = "entity",
+      "rate" = "Deaths - Neoplasms - Sex: Both - Age: Age-standardized (Rate)",
+      "gini" = "Gini coefficient",
+      "population" = "Population",
+      "continent" = "Countries Continents"
+    )
+
+# extract continents
+continent_df = death_rate_df %>%
+  filter(!is.na(continent)) %>%
+  select(country, continent)
+
+death_rate_df %>% 
+  select(-continent) %>%
+  left_join(continent_df, by = "country") %>%
+  filter(!is.na(rate) & !is.na(gini)) %>%
+  slice_max(order_by = year) 
+```
+
+
+
+
 
