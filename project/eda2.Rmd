@@ -1,0 +1,24 @@
+---
+title: "eda2"
+author: "Junhyeok Park"
+date: "2022-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+```{r}
+# read in the data and rename the columns
+top1 = readxl::read_xls("./data/WID_Data_09112022-024002.xls")
+cols = colnames(top1) %>% stringr::str_match("\n(.+)$")
+cols = cols[,2]
+cols[1] = "percentile"
+cols[2] = "year"
+colnames(top1) = cols
+top1 = top1 %>% rename("Georgia" = "Georgia (US)")
+```
+
