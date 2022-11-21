@@ -11,8 +11,10 @@ library(tidyverse)
 library(ggplot2)
 ```
 
-## Inequality Data per State
+## Proposed Thesis Statement
+In the United States, the average top 10 percent income is about [nine times higher than](https://eml.berkeley.edu/~saez/saez-UStopincomes-2018.pdf) that of the bottom 90 percent. Also, income inequality, on average, has been [getting higher ever since 1976](https://ips-dc.org/report-executive-excess-2021/). To tackle a such social problem, it is essential to investigate factors that might be worsening the issue. In this project, education and other factors that are related to education, such as literacy rate, pupil-to-teacher ratio, accessibility to education, are thoroughly analyzed to explain how they possibly affect the income discrepancy in the United States.
 
+## Inequality Data per State
 ```{r}
 # read in the data and rename the columns
 top1 = readxl::read_xls("./data/WID_Data_17112022-171839.xls")
@@ -25,13 +27,26 @@ top1 = top1 %>%
   rename("Georgia" = "Georgia (US)") %>%
   select(-`Washington D.C.`)
 
-# pivot longer 
+## pivot longer 
 top1 = top1[-1] %>% pivot_longer(cols = c("Alabama":"Wyoming"), names_to = "state", values_to = "99th_percentile")
 top1 %>% head(10)
+
+# top 10
+top10 = readxl::read_xls("./data/income_ineq_top10.xls")
+cols = colnames(top10) %>% stringr::str_match("\n(.+)$")
+cols = cols[,2]
+cols[1] = "percentile"
+cols[2] = "year"
+colnames(top10) = cols
+top10 = top10 %>%
+  rename("Georgia" = "Georgia (US)") %>%
+  select(-`Washington D.C.`)
+
+top10 = top10[-1] %>% pivot_longer(cols = c("Alabama":"Wyoming"), names_to = "state", values_to = "90th_percentile")
+top10 %>% head(10)
 ```
 
 ## Population
-
 ```{r}
 # import and preprocess population data 
 population = readxl::read_xlsx("./data/population_state.xlsx")
@@ -55,7 +70,7 @@ top1_pop %>% filter(year == 2018) %>%
   geom_point()
 ```
 
-## Factor 1: Number of Universities
+## Factor: Number of Universities
 ```{r}
 # Import / Preprocess the data
 college = readxl::read_xls("./data/college.xls")
@@ -65,15 +80,21 @@ college = college %>% select("state", contains("total") | contains("Total"))
 college %>% head(10)
 
 # Analysis
-top1_pop %>%
+temp = top1_pop %>%
   left_join(college, by = "state") %>%
   filter(year == 2018) %>%
-  mutate(uni_per_capita = Total / population) %>%
+  mutate(uni_per_capita = Total / population)
+  
+temp %>%
   ggplot(aes(x=uni_per_capita, y=`99th_percentile`)) + 
-  geom_point()
+  geom_point() +
+  geom_smooth(method="lm")
+
+# correlation
+cor.test(temp$`99th_percentile`, temp$uni_per_capita)
 ```
 
-## Factor 2: Secondary School
+## Factor: Secondary School
 ```{r}
 secondary = readxl::read_xlsx("./data/secondary_edu.xlsx")
  
@@ -92,15 +113,55 @@ top1_pop %>%
   geom_point()
 ```
 
-## Factor 3: Literacy Rate
+## Factor: Level of education (under high school, high school, college)
+```{r}
+# import / clean data - high school
+high_school = readxl::read_xlsx("./data/high_school.xlsx", skip = 2) %>%
+  pivot_longer(-Name, names_to = "Year", values_to = "high_school")
+
+high_school = high_school %>%
+  filter(stringr::str_detect(Year, "2016-.*6$")) %>%
+  select(Name, high_school) %>%
+  rename("state" = "Name")
+
+top1 %>%
+  filter(year == 2018) %>%
+  left_join(high_school, by = "state") %>%
+  ggplot(aes(x=high_school, y=`99th_percentile`)) +
+  geom_point()
+
+# under high school analysis
+under_high = readxl::read_xlsx("./data/under_high.xlsx", skip = 2) %>%
+  pivot_longer(-Name, names_to = "Year", values_to = "under_high")
+
+under_high = under_high %>%
+  filter(stringr::str_detect(Year, "2016-.*6$")) %>%
+  select(Name, under_high) %>%
+  rename("state" = "Name")
+
+top1 %>%
+  filter(year == 2018) %>%
+  left_join(under_high, by = "state") %>%
+  ggplot(aes(x=under_high, y=`99th_percentile`)) +
+  geom_point()
+```
+
+## Factor: Literacy Rate
 ```{r}
 # Import / Preprocess the data
-literacy = read_csv("./data/literacy_rate.csv") %>% arrange(state)
-literacy
+literacy = read_csv("./data/literacy_rate.csv") %>%
+  arrange(state) %>%
+  rename("literacy" = "literacyRate")
+
+# joining the datasets 
+top1 %>% 
+  filter(year == 2018) %>%
+  left_join(literacy, by = "state") %>%
+  ggplot(aes(x=literacy, y=`99th_percentile`)) +
+  geom_point()
 ```
 
 ## Data Sources
-
 -   [Income Inequality per State](https://wid.world/data/)
 -   [Higher Education Data Per State](https://nces.ed.gov/programs/digest/d17/tables/dt17_317.20.asp)
 -   [Public Elementary and Secondary Education](https://nces.ed.gov/pubs2018/2018052/tables/table_02.asp)
