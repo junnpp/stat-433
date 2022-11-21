@@ -165,4 +165,5 @@ top1 %>%
 -   [Income Inequality per State](https://wid.world/data/)
 -   [Higher Education Data Per State](https://nces.ed.gov/programs/digest/d17/tables/dt17_317.20.asp)
 -   [Public Elementary and Secondary Education](https://nces.ed.gov/pubs2018/2018052/tables/table_02.asp)
--   [Literacy Rate]()
+-   [Literacy Rate](https://worldpopulationreview.com/state-rankings/us-literacy-rates-by-state)
+-   [Education Level per State](https://data.ers.usda.gov/reports.aspx?ID=17829)
