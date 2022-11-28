@@ -1,0 +1,236 @@
+---
+title: "eda2"
+author: "Junhyeok Park"
+date: "2022-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+## Introduction
+In the United States, not only the average top 10 percent income is about [nine times higher than](https://eml.berkeley.edu/~saez/saez-UStopincomes-2018.pdf) that of the bottom 90 percent, but also the income inequality has been [getting higher ever since 1976](https://ips-dc.org/report-executive-excess-2021/). The CEO pay has [increased by 528.5 percent since 1992](https://inequality.org/facts/income-inequality/) and the minimum wage has been raised since 2009. To make matters worse, during the pandemic, the average CEO pay [skyrocketed by 15 percent to $13.9 million](https://inequality.org/facts/income-inequality/) while the median of the employer's pay stayed the same. It's been thoroughly analyzed that higher rate of income inequality is directly related to numerous social problems including health problems, and lower rates of social goods, happiness, satisfaction, and life expectancy. Thus, it is crucial to study the main factors that are worsening the pay gap. In this project, among many sectors, we analyzed the factors related to education, such as literacy rate, pupil-to-teacher ratio, and accessibility to education, to explain how they possibly affect the income discrepancy in the United States.
+
+## Inequality Data per State
+```{r}
+# top 10
+top10 = readxl::read_xls("./data/income_ineq_top10.xls")
+cols = colnames(top10) %>% stringr::str_match("\n(.+)$")
+cols = cols[,2]
+cols[1] = "percentile"
+cols[2] = "year"
+colnames(top10) = cols
+top10 = top10 %>%
+  rename("Georgia" = "Georgia (US)") %>%
+  select(-`Washington D.C.`)
+
+top10 = top10[-1] %>% pivot_longer(cols = c("Alabama":"Wyoming"), names_to = "state", values_to = "90th_percentile")
+top10 %>% head(10)
+
+top10 %>%
+  filter(year == 2018) %>%
+  arrange(desc(`90th_percentile`))
+```
+
+## Population
+```{r}
+# import and preprocess population data 
+population = readxl::read_xlsx("./data/population_state.xlsx")
+population = population[-1,]
+states = population$state %>% stringr::str_match("^\\.(.+)")
+states = states[,2]
+population$state = states
+
+population = population %>% 
+  select(state, "2015":"2018") %>% 
+  filter(state != "District of Columbia") %>% 
+  pivot_longer(-state, names_to = "year", values_to = "population") %>%
+  mutate(year = as.numeric(year))
+
+# joining with inequality data
+top10_pop = top10 %>% left_join(population, by = c("year" = "year", "state" = "state"))
+
+# population analysis
+top10_pop %>% filter(year == 2018) %>%
+  ggplot(aes(log(population), `90th_percentile`)) +
+  geom_point()
+```
+
+## Factor: Number of Universities
+```{r}
+# Import / Preprocess the data
+college = readxl::read_xls("./data/college.xls")
+state_names = college$state %>% stringr::str_match("(.*) \\.+")
+college$state = state_names[,2]
+college = college %>% select("state", contains("total") | contains("Total"))
+college %>% head(10)
+
+# Analysis
+temp = top10_pop %>%
+  left_join(college, by = "state") %>%
+  filter(year == 2018) %>%
+  mutate(uni_per_capita = Total / population)
+  
+temp %>%
+  ggplot(aes(x=`90th_percentile`, y=log(uni_per_capita))) + 
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE)
+
+# correlation
+cor.test(temp$`90th_percentile`, temp$uni_per_capita)
+```
+
+## Factor: Secondary School
+```{r}
+secondary = readxl::read_xlsx("./data/secondary_edu.xlsx")
+ 
+# student-teacher ratio
+top10 %>% 
+  left_join(secondary, by = "state") %>%
+  filter(year == 2018) %>% 
+  ggplot(aes(x=`pupil/teacher ratio`, y=`90th_percentile`)) +
+  geom_point()
+
+# secondary school per capita
+top10_pop %>% 
+  filter(year == 2018) %>% 
+  left_join(secondary, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=log(`operational schools`/population),)) + 
+  geom_point()
+```
+
+## Factor: Level of education (under high school, high school, college)
+```{r}
+# under high school analysis
+under_high = readxl::read_xlsx("./data/under_high.xlsx", skip = 2) %>%
+  pivot_longer(-Name, names_to = "Year", values_to = "under_high")
+
+under_high = under_high %>%
+  filter(stringr::str_detect(Year, "2016-.*6$")) %>%
+  select(Name, under_high) %>%
+  rename("state" = "Name")
+
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(under_high, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=under_high)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE)
+
+# high school
+high_school = readxl::read_xlsx("./data/high_school.xlsx", skip = 2) %>%
+  pivot_longer(-Name, names_to = "Year", values_to = "high_school")
+
+high_school = high_school %>%
+  filter(stringr::str_detect(Year, "2016-.*6$")) %>%
+  select(Name, high_school) %>%
+  rename("state" = "Name")
+
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(high_school, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=high_school)) +
+  geom_point() + 
+  geom_smooth(method="lm", se=FALSE)
+
+# college completion percentage
+college_comp = readxl::read_xlsx("./data/college_graduate_percentage_clean.xlsx", skip = 2) %>%
+  pivot_longer(-Name, names_to = "Year", values_to = "college")
+
+college_comp = college_comp %>%
+  filter(stringr::str_detect(Year, "2016-.*6$")) %>%
+  select(Name, college) %>%
+  rename("state" = "Name")
+
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(college_comp, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=college)) +
+  geom_point() +
+  geom_smooth(method="lm", se=FALSE)
+```
+
+## Factor: Literacy Rate
+```{r}
+# Import / Preprocess the data
+literacy = read_csv("./data/literacy_rate.csv") %>%
+  arrange(state) %>%
+  rename("literacy" = "literacyRate")
+
+# joining the datasets 
+top10 %>% 
+  filter(year == 2018) %>%
+  left_join(literacy, by = "state") %>%
+  ggplot(aes(x=literacy, y=`90th_percentile`)) +
+  geom_point() +
+  geom_smooth(method="lm", se = FALSE)
+```
+
+```{r}
+df = top10_pop %>%
+  filter(year == 2018) %>% 
+  left_join(literacy, by = "state") %>% 
+  left_join(under_high, by = "state") %>% 
+  left_join(secondary, by = "state") %>%
+  left_join(college, by = "state") %>%
+  mutate(uni_per_capita = log(Total / population),
+         secondary_per_capita = log(`operational schools`/population)) %>%
+  select(state, `90th_percentile`, literacy, under_high, secondary_per_capita, uni_per_capita)
+
+fit = lm(`90th_percentile` ~ literacy * secondary_per_capita * uni_per_capita, df)
+summary(fit)
+
+qqnorm(fit$residuals); qqline(fit$residuals)
+```
+
+# Family Status
+Accessibility to education is directly related to the status of the child's parenthood. In single family, the child is more likely to burden the responsibility to support the family at an early age which causes them to drop out of school and start working with a relatively lower wage. 
+```{r}
+# Percent of Babies Born to Unmarried Mothers by State
+single_mom = read_csv("./data/single-mother.csv")
+
+single_mom = single_mom %>%
+  mutate(state = state.name[match(STATE, state.abb)]) %>%
+  filter(YEAR == 2018) %>%
+  select(state, RATE) %>% 
+  rename("rate" = "RATE")
+
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(single_mom, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=rate)) +
+  geom_point() + 
+  geom_smooth(method="lm", se=FALSE)
+
+# single parent
+single_fam = readxl::read_xlsx("./data/single-parent.xlsx")
+
+single_fam = single_fam %>% 
+  filter(TimeFrame == 2018, DataFormat == "Percent", Location %in% state.name) %>%
+  select(Location, Data) %>%
+  rename("state" = "Location",
+         "single_parent" = "Data") %>%
+  mutate(single_parent = as.numeric(single_parent))
+
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(single_fam, by = "state") %>%
+  ggplot(aes(x=`90th_percentile`, y=single_parent)) +
+  geom_point() + 
+  geom_smooth(method="lm", se=FALSE)
+```
+
+
+## Data Sources
+-   [Income Inequality per State](https://wid.world/data/)
+-   [Higher Education Data Per State](https://nces.ed.gov/programs/digest/d17/tables/dt17_317.20.asp)
+-   [Public Elementary and Secondary Education](https://nces.ed.gov/pubs2018/2018052/tables/table_02.asp)
+-   [Literacy Rate](https://worldpopulationreview.com/state-rankings/us-literacy-rates-by-state)
+-   [Education Level per State](https://data.ers.usda.gov/reports.aspx?ID=17829)
+-   [Percent of Babies Born to Unmarried Mothers by State](https://www.cdc.gov/nchs/pressroom/sosmap/unmarried/unmarried.htm)
+-   [Children in single-parent families in the United States](https://datacenter.kidscount.org/data/tables/106-children-in-single-parent-families?loc=1&loct=1&gclid=Cj0KCQiAsoycBhC6ARIsAPPbeLsrD-TKP7TQrzmdLIlTiMf1GADKA3Mz81gNxUED_irNnHVd0xa35MIaArMbEALw_wcB#detailed/2/2-53/false/573,869,36,868,867/any/429,430)
+
+

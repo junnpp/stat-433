@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+/etc
+/eda_files
+.DS_Store
