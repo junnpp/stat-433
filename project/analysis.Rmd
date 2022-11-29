@@ -12,7 +12,7 @@ library(ggplot2)
 ```
 
 ## Introduction
-In the United States, not only the average top 10 percent income is about [nine times higher than](https://eml.berkeley.edu/~saez/saez-UStopincomes-2018.pdf) that of the bottom 90 percent, but also the income inequality has been [getting higher ever since 1976](https://ips-dc.org/report-executive-excess-2021/). The CEO pay has [increased by 528.5 percent since 1992](https://inequality.org/facts/income-inequality/) and the minimum wage has been raised since 2009. To make matters worse, during the pandemic, the average CEO pay [skyrocketed by 15 percent to $13.9 million](https://inequality.org/facts/income-inequality/) while the median of the employer's pay stayed the same. It's been thoroughly analyzed that higher rate of income inequality is directly related to numerous social problems including health problems, and lower rates of social goods, happiness, satisfaction, and life expectancy. Thus, it is crucial to study the main factors that are worsening the pay gap. In this project, among many sectors, we analyzed the factors related to education, such as literacy rate, pupil-to-teacher ratio, and accessibility to education, to explain how they possibly affect the income discrepancy in the United States.
+In the United States, not only is the average top 10 percent income about [nine times higher than](https://eml.berkeley.edu/~saez/saez-UStopincomes-2018.pdf) that of the bottom 90 percent, but also the income inequality has been [getting higher ever since 1976](https://ips-dc.org/report-executive-excess-2021/). The CEO pay has [increased by 528.5 percent since 1992](https://inequality.org/facts/income-inequality/) and the minimum wage has been raised since 2009. To make matters worse, during the pandemic, the average CEO pay [skyrocketed by 15 percent to $13.9 million](https://inequality.org/facts/income-inequality/) while the median of the employer's pay stayed the same. It's been thoroughly analyzed that higher rate of income inequality is directly related to numerous social problems including health problems, and lower rates of social goods, happiness, satisfaction, and life expectancy. Thus, it is crucial to study the main factors that are worsening the pay gap. In this project, among many sectors, we analyzed the factors related to education, such as literacy rate, pupil-to-teacher ratio, and accessibility to education, to explain how they possibly affect the income discrepancy in the United States.
 
 ## Inequality Data per State
 ```{r}
@@ -223,6 +223,49 @@ top10 %>%
   geom_smooth(method="lm", se=FALSE)
 ```
 
+# Ethnicity
+Due to long-term discrimination against non-Caucasian people in the US, 
+someone's race could also help explain these income inequalities. We focus on
+the more common ethnicities for simplicity.
+```{r}
+race_distr = read_csv('./data/race_distribution_2018.csv', show_col_types=FALSE)
+
+race_distr = race_distr %>%
+  select(`Location`, `White`, `Black`, `Hispanic`, `Asian`)
+
+# White
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(race_distr, c('state' = 'Location')) %>%
+  ggplot(aes(x=`90th_percentile`, y=White)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+
+# Black
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(race_distr, c('state' = 'Location')) %>%
+  ggplot(aes(x=`90th_percentile`, y=Black)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+
+# Hispanic
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(race_distr, c('state' = 'Location')) %>%
+  ggplot(aes(x=`90th_percentile`, y=Hispanic)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+
+# Asian
+top10 %>%
+  filter(year == 2018) %>%
+  left_join(race_distr, c('state' = 'Location')) %>%
+  ggplot(aes(x=`90th_percentile`, y=Asian)) +
+  geom_point() +
+  geom_smooth(method='lm', se=F)
+
+```
 
 ## Data Sources
 -   [Income Inequality per State](https://wid.world/data/)
@@ -232,5 +275,6 @@ top10 %>%
 -   [Education Level per State](https://data.ers.usda.gov/reports.aspx?ID=17829)
 -   [Percent of Babies Born to Unmarried Mothers by State](https://www.cdc.gov/nchs/pressroom/sosmap/unmarried/unmarried.htm)
 -   [Children in single-parent families in the United States](https://datacenter.kidscount.org/data/tables/106-children-in-single-parent-families?loc=1&loct=1&gclid=Cj0KCQiAsoycBhC6ARIsAPPbeLsrD-TKP7TQrzmdLIlTiMf1GADKA3Mz81gNxUED_irNnHVd0xa35MIaArMbEALw_wcB#detailed/2/2-53/false/573,869,36,868,867/any/429,430)
+-   [Population Distribution by Race](https://www.kff.org/other/state-indicator/distribution-by-raceethnicity/?currentTimeframe=2)
 
 
