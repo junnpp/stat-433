@@ -260,14 +260,24 @@ the more common ethnicities for simplicity.
 ```{r}
 race_distr = read_csv('./data/race_distribution_2018.csv', show_col_types=FALSE)
 
+# We are only interested in the 4 larger ethnic groups.
 race_distr = race_distr %>%
   select(`Location`, `White`, `Black`, `Hispanic`, `Asian`)
+
+# Replace non-numeric values.
+race_distr$Black[race_distr$Black == '<.01'] = '0'
+race_distr$Asian[race_distr$Asian == 'N/A'] = '0'
+
+# Convert the columns to numeric.
+race_distr = race_distr %>%
+  mutate(Black = as.numeric(Black), Asian = as.numeric(Asian))
+
 
 # White
 top10 %>%
   filter(year == 2018) %>%
   left_join(race_distr, c('state' = 'Location')) %>%
-  ggplot(aes(x=`90th_percentile`, y=White)) +
+  ggplot(aes(x=White, y=`90th_percentile`)) +
   geom_point() +
   geom_smooth(method='lm', se=F) +
   xlab('Proportion Population White') +
@@ -278,7 +288,7 @@ top10 %>%
 top10 %>%
   filter(year == 2018) %>%
   left_join(race_distr, c('state' = 'Location')) %>%
-  ggplot(aes(x=`90th_percentile`, y=Black)) +
+  ggplot(aes(x=Black, y=`90th_percentile`)) +
   geom_point() +
   geom_smooth(method='lm', se=F) +
   xlab('Proportion Population Black') +
@@ -289,7 +299,7 @@ top10 %>%
 top10 %>%
   filter(year == 2018) %>%
   left_join(race_distr, c('state' = 'Location')) %>%
-  ggplot(aes(x=`90th_percentile`, y=Hispanic)) +
+  ggplot(aes(x=Hispanic, y=`90th_percentile`)) +
   geom_point() +
   geom_smooth(method='lm', se=F) +
   xlab('Proportion Population Hispanic') +
@@ -300,7 +310,7 @@ top10 %>%
 top10 %>%
   filter(year == 2018) %>%
   left_join(race_distr, c('state' = 'Location')) %>%
-  ggplot(aes(x=`90th_percentile`, y=Asian)) +
+  ggplot(aes(x=Asian, y=`90th_percentile`)) +
   geom_point() +
   geom_smooth(method='lm', se=F) +
   xlab('Proportion Population Asian') +
