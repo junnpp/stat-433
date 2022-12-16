@@ -41,19 +41,30 @@ clean_college = function(data_path){
            "num_college"="Total") %>%
     extract(col = state, into = c("state", "state1"), "(.*) (\\.+)") %>%
     select(state, num_college) %>% 
-    filter(!is.na(state) & state %in% states & state != "District of Columbia")
+    filter(!is.na(state) & state %in% state.name & state != "District of Columbia")
+}
+
+clean_college2 = function(data_path){
+    df = readxl::read_xlsx(data_path, skip = 1, n_max = 63)
+  
+    df = df %>%
+      rename("state"="State or jurisdiction",
+             "num_college"="Total") %>%
+      extract(col = state, into = c("state", "state1"), "(.*) (\\.+)") %>%
+      select(state, num_college) %>% 
+      filter(!is.na(state) & state %in% state.name & state != "District of Columbia")
 }
 
 # clean each college data and combine them 
-college_2010 = clean_college("./data-2/num-college-15.xls") %>% mutate(year = 2010)
-college_2011 = clean_college("./data-2/num-college-16.xls") %>% mutate(year = 2011)
-college_2012 = clean_college("./data-2/num-college-17.xls") %>% mutate(year = 2012)
-college_2013 = clean_college("./data-2/num-college-18.xls") %>% mutate(year = 2013)
-college_2014 = clean_college("./data-2/num-college-18.xls") %>% mutate(year = 2014)
-college_2015 = clean_college("./data-2/num-college-15.xls") %>% mutate(year = 2015)
-college_2016 = clean_college("./data-2/num-college-16.xls") %>% mutate(year = 2016)
-college_2017 = clean_college("./data-2/num-college-17.xls") %>% mutate(year = 2017)
-college_2018 = clean_college("./data-2/num-college-18.xls") %>% mutate(year = 2018)
+college_2010 = clean_college("./data-2/num-college/num-college-10.xls") %>% mutate(year = 2010)
+college_2011 = clean_college("./data-2/num-college/num-college-11.xls") %>% mutate(year = 2011)
+college_2012 = clean_college2("./data-2/num-college/num-college-12.xlsx") %>% mutate(year = 2012)
+college_2013 = clean_college2("./data-2/num-college/num-college-13.xlsx") %>% mutate(year = 2013)
+college_2014 = clean_college("./data-2/num-college/num-college-14.xls") %>% mutate(year = 2014)
+college_2015 = clean_college("./data-2/num-college/num-college-15.xls") %>% mutate(year = 2015)
+college_2016 = clean_college("./data-2/num-college/num-college-16.xls") %>% mutate(year = 2016)
+college_2017 = clean_college("./data-2/num-college/num-college-17.xls") %>% mutate(year = 2017)
+college_2018 = clean_college("./data-2/num-college/num-college-18.xls") %>% mutate(year = 2018)
 
 college_df = rbind(college_2010, college_2011, college_2012, college_2013, college_2014,
                    college_2015, college_2016, college_2017, college_2018) 
@@ -63,7 +74,7 @@ pop = read_csv("./data-2/sc-est2019-agesex-civ.csv")
   
 pop_age_17_25 = pop %>%
   .[, 5:ncol(pop)] %>%
-  filter(NAME %in% states &
+  filter(NAME %in% state.name &
            AGE >= 17 & AGE <= 25) %>%
   select(NAME, AGE, POPEST2010_CIV, POPEST2011_CIV, POPEST2012_CIV, POPEST2013_CIV,
          POPEST2014_CIV, POPEST2015_CIV, POPEST2016_CIV, POPEST2017_CIV, POPEST2018_CIV) %>%
@@ -93,6 +104,50 @@ df %>% head(5)
 
 ## Analysis
 ```{r}
+df %>%
+  filter(year == 2010) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2011) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2012) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2013) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2014) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2015) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2016) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2017) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
+
+df %>%
+  filter(year == 2018) %>%
+  ggplot(aes(x=log(num_college/pop_est_17_25), y=`90th_percentile`)) +
+  geom_point()
 
 ```
 
